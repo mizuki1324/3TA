@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Grid Viewer</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .product-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .card-img-top {
+            height: 200px;
+            object-fit: contain;
+            padding: 1rem;
+        }
+        .category-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        #searchBar {
+            max-width: 400px;
+        }
+        .loading-spinner {
+            display: none;
+            width: 3rem;
+            height: 3rem;
+        }
+        #errorAlert {
+            display: none;
+        }
+        #apiConfig {
+            background-color: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <!-- Header -->
+        <header class="pb-3 mb-4 border-bottom">
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="/" class="d-flex align-items-center text-dark text-decoration-none">
+                    <i class="fas fa-store fs-4 me-2"></i>
+                    <span class="fs-4">Product Grid Viewer</span>
+                </a>
+                <div class="input-group" id="searchBar">
+                    <input type="text" class="form-control" placeholder="Search products..." id="searchInput">
+                    <button class="btn btn-outline-secondary" type="button" id="searchButton">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- API Configuration -->
+        <div id="apiConfig" class="mb-4">
+            <h5><i class="fas fa-cog me-2"></i>API Configuration</h5>
+            <div class="row g-3 align-items-center">
+                <div class="col-md-8">
+                    <div class="input-group">
+                        <span class="input-group-text">Backend URL</span>
+                        <input type="text" class="form-control" id="apiUrlInput" 
+                               placeholder="Enter API URL (e.g., http://localhost:8000)" 
+                               value="http://localhost:8000">
+                    </div>
+                    <div class="form-text">This will be used to fetch products from the /api/products endpoint</div>
+                </div>
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-primary w-100" id="loadProductsBtn">
+                        <i class="fas fa-sync-alt me-2"></i>Load Products
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Alert -->
+        <div class="alert alert-danger alert-dismissible fade show" role="alert" id="errorAlert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <span id="errorMessage">Error loading products</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Filters and Sorting -->
+        <div class="row mb-4">
+            <div class="col-md-6 d-flex align-items-center mb-3 mb-md-0">
+                <div class="me-3">
+                    <label for="categoryFilter" class="form-label mb-0 me-2">Category:</label>
+                    <select class="form-select form-select-sm d-inline-block w-auto" id="categoryFilter">
+                        <option value="">All Categories</option>
+                        <!-- Categories will be populated by JavaScript -->
+                    </select>
+                </div>
+                <div>
+                    <label for="priceFilter" class="form-label mb-0 me-2">Price:</label>
+                    <select class="form-select form-select-sm d-inline-block w-auto" id="priceFilter">
+                        <option value="">All Prices</option>
+                        <option value="0-25">$0 - $25</option>
+                        <option value="25-50">$25 - $50</option>
+                        <option value="50-100">$50 - $100</option>
+                        <option value="100+">$100+</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6 d-flex justify-content-md-end align-items-center">
+                <label for="sortBy" class="form-label mb-0 me-2">Sort by:</label>
+                <select class="form-select form-select-sm d-inline-block w-auto" id="sortBy">
+                    <option value="default">Featured</option>
+                    <option value="priceAsc">Price: Low to High</option>
+                    <option value="priceDesc">Price: High to Low</option>
+                    <option value="nameAsc">Name: A to Z</option>
+                    <option value="nameDesc">Name: Z to A</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div class="text-center my-5">
+            <div class="spinner-border loading-spinner" id="loadingSpinner" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4" id="productsGrid">
+            <!-- Products will be populated by JavaScript -->
+        </div>
+
+        <!-- No Products Message -->
+        <div class="text-center my-5 d-none" id="noProductsMessage">
+            <div class="py-5">
+                <i class="fas fa-box-open fa-4x mb-3 text-muted"></i>
+                <h4 class="text-muted">No products found</h4>
+                <p>Try changing your search or filter criteria, or click "Load Products" to refresh.</p>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <nav aria-label="Product pagination" class="my-4">
+            <ul class="pagination justify-content-center" id="pagination">
+                <!-- Pagination will be populated by JavaScript -->
+            </ul>
+        </nav>
+
+        <!-- Product Modal -->
+        <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="productModalLabel">Product Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 text-center">
+                                <img src="" alt="Product Image" id="modalProductImage" class="img-fluid mb-3">
+                            </div>
+                            <div class="col-md-6">
+                                <h4 id="modalProductName"></h4>
+                                <p class="badge bg-primary mb-2" id="modalProductCategory"></p>
+                                <h5 id="modalProductPrice" class="text-danger mb-3"></h5>
+                                <p id="modalProductDescription"></p>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-primary" type="button">Add to Cart</button>
+                                    <button class="btn btn-outline-secondary" type="button">Add to Wishlist</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
