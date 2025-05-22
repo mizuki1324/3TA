@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Viewer - 3-Tier Application</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .search-container {
+            position: relative;
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+        }
+
+        .toggle-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        .toggle-btn.active {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .products-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .product-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .product-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 250px;
+            background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-image::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .product-info {
+            padding: 25px;
+        }
+
+        .product-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .product-description {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .product-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .product-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c5aa0;
+        }
+
+        .product-category {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .list-view .product-card {
+            display: flex;
+            flex-direction: row;
+            max-height: 200px;
+        }
+
+        .list-view .product-image {
+            width: 200px;
+            height: 200px;
+            flex-shrink: 0;
+        }
+
+        .list-view .product-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .error {
+            text-align: center;
+            padding: 50px;
+            color: white;
+            background: rgba(255, 0, 0, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 50px;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-container {
+                max-width: none;
+            }
+            
+            .list-view .product-card {
+                flex-direction: column;
+                max-height: none;
+            }
+            
+            .list-view .product-image {
+                width: 100%;
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛍️ Product Showcase</h1>
+            <p>Discover amazing products with our modern 3-tier application</p>
+        </div>
+
+        <div class="controls">
+            <div class="search-container">
+                <input type="text" class="search-input" id="searchInput" placeholder="Search products...">
+                <span class="search-icon">🔍</span>
+            </div>
+            <div class="view-toggle">
+                <button class="toggle-btn active" id="gridBtn">📱 Grid</button>
+                <button class="toggle-btn" id="listBtn">📋 List</button>
+            </div>
+        </div>
+
+        <div id="loadingIndicator" class="loading">
+            <div class="spinner"></div>
+            Loading amazing products...
+        </div>
+
+        <div id="productsContainer" class="products-grid" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Mock Database Layer (Data Tier)
+        const mockDatabase = {
+            products: [
+                {
+                    id: 1,
+                    name: "Premium Wireless Headphones",
+                    description: "High-quality noise-canceling headphones with 30-hour battery life and premium sound quality.",
+                    price: 24999,
+                    category: "Electronics",
+                    emoji: "🎧"
+                },
+                {
+                    id: 2,
+                    name: "Smart Fitness Watch",
+                    description: "Advanced fitness tracking with heart rate monitoring, GPS, and water resistance.",
+                    price: 16699,
+                    category: "Wearables",
+                    emoji: "⌚"
+                },
+                {
+                    id: 3,
+                    name: "Organic Coffee Beans",
+                    description: "Premium organic coffee beans sourced from sustainable farms in Colombia.",
+                    price: 2099,
+                    category: "Food & Beverage",
+                    emoji: "☕"
+                },
+                {
+                    id: 4,
+                    name: "Ergonomic Office Chair",
+                    description: "Comfortable office chair with lumbar support and adjustable height for long work sessions.",
+                    price: 37499,
+                    category: "Furniture",
+                    emoji: "🪑"
+                },
+                {
+                    id: 5,
+                    name: "Wireless Charging Pad",
+                    description: "Fast wireless charging pad compatible with all Qi-enabled devices.",
+                    price: 3349,
+                    category: "Electronics",
+                    emoji: "🔋"
+                },
+                {
+                    id: 6,
+                    name: "Yoga Mat Pro",
+                    description: "Non-slip yoga mat made from eco-friendly materials, perfect for all types of yoga.",
+                    price: 4999,
+                    category: "Sports",
+                    emoji: "🧘"
+                },
+                {
+                    id: 7,
+                    name: "Smart Home Speaker",
+                    description: "Voice-activated smart speaker with excellent sound quality and home automation features.",
+                    price: 10849,
+                    category: "Electronics",
+                    emoji: "🔊"
+                },
+                {
+                    id: 8,
+                    name: "Bamboo Cutting Board",
+                    description: "Sustainable bamboo cutting board with antimicrobial properties and elegant design.",
+                    price: 2919,
+                    category: "Kitchen",
+                    emoji: "🔪"
+                }
+            ],
+
+            async getAllProducts() {
+                // Simulate network delay
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                return [...this.products];
+            },
+
+            async searchProducts(query) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                const lowercaseQuery = query.toLowerCase();
+                return this.products.filter(product => 
+                    product.name.toLowerCase().includes(lowercaseQuery) ||
+                    product.description.toLowerCase().includes(lowercaseQuery) ||
+                    product.category.toLowerCase().includes(lowercaseQuery)
+                );
+            }
+        };
+
+        // Business Logic Layer (Logic Tier)
+        class ProductService {
+            constructor(database) {
+                this.database = database;
+            }
+
+            async getProducts(searchQuery = '') {
+                try {
+                    let products;
+                    if (searchQuery.trim() === '') {
+                        products = await this.database.getAllProducts();
+                    } else {
+                        products = await this.database.searchProducts(searchQuery);
+                    }
+                    
+                    // Sort products by name
+                    return products.sort((a, b) => a.name.localeCompare(b.name));
+                } catch (error) {
+                    throw new Error('Failed to fetch products: ' + error.message);
+                }
+            }
+
+            formatPrice(price) {
+                // Since prices are already formatted with rupee symbol, return as-is
+                return price;
+            }
+        }
+
+        // Presentation Layer (Presentation Tier)
+        class ProductUI {
+            constructor(productService) {
+                this.productService = productService;
+                this.currentView = 'grid';
+                this.searchTimeout = null;
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.loadProducts();
+            }
+
+            bindEvents() {
+                // Search functionality
+                const searchInput = document.getElementById('searchInput');
+                searchInput.addEventListener('input', (e) => {
+                    clearTimeout(this.searchTimeout);
+                    this.searchTimeout = setTimeout(() => {
+                        this.loadProducts(e.target.value);
+                    }, 300);
+                });
+
+                // View toggle
+                document.getElementById('gridBtn').addEventListener('click', () => {
+                    this.setView('grid');
+                });
+
+                document.getElementById('listBtn').addEventListener('click', () => {
+                    this.setView('list');
+                });
+            }
+
+            setView(view) {
+                this.currentView = view;
+                const container = document.getElementById('productsContainer');
+                const gridBtn = document.getElementById('gridBtn');
+                const listBtn = document.getElementById('listBtn');
+
+                if (view === 'grid') {
+                    container.className = 'products-grid';
+                    gridBtn.classList.add('active');
+                    listBtn.classList.remove('active');
+                } else {
+                    container.className = 'products-list list-view';
+                    listBtn.classList.add('active');
+                    gridBtn.classList.remove('active');
+                }
+            }
+
+            showLoading() {
+                document.getElementById('loadingIndicator').style.display = 'block';
+                document.getElementById('productsContainer').style.display = 'none';
+            }
+
+            hideLoading() {
+                document.getElementById('loadingIndicator').style.display = 'none';
+                document.getElementById('productsContainer').style.display = this.currentView === 'grid' ? 'grid' : 'flex';
+            }
+
+            async loadProducts(searchQuery = '') {
+                this.showLoading();
+
+                try {
+                    const products = await this.productService.getProducts(searchQuery);
+                    this.renderProducts(products);
+                } catch (error) {
+                    this.renderError(error.message);
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            renderProducts(products) {
+                const container = document.getElementById('productsContainer');
+
+                if (products.length === 0) {
+                    container.innerHTML = `
+                        <div class="no-results">
+                            <h2>🔍 No products found</h2>
+                            <p>Try adjusting your search terms</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = products.map(product => `
+                    <div class="product-card" data-id="${product.id}">
+                        <div class="product-image">
+                            <span style="font-size: 4rem;">${product.emoji}</span>
+                        </div>
+                        <div class="product-info">
+                            <h3 class="product-title">${product.name}</h3>
+                            <p class="product-description">${product.description}</p>
+                            <div class="product-meta">
+                                <span class="product-price">${this.productService.formatPrice(product.price)}</span>
+                                <span class="product-category">${product.category}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Add hover animations
+                this.addCardAnimations();
+            }
+
+            renderError(message) {
+                const container = document.getElementById('productsContainer');
+                container.innerHTML = `
+                    <div class="error">
+                        <h2>❌ Oops! Something went wrong</h2>
+                        <p>${message}</p>
+                    </div>
+                `;
+            }
+
+            addCardAnimations() {
+                const cards = document.querySelectorAll('.product-card');
+                cards.forEach((card, index) => {
+                    card.style.animationDelay = `${index * 0.1}s`;
+                    card.style.animation = 'fadeInUp 0.6s ease forwards';
+                });
+            }
+        }
+
+        // Add fade-in animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            const productService = new ProductService(mockDatabase);
+            const productUI = new ProductUI(productService);
+        });
+    </script>
+</body>
+</html>
