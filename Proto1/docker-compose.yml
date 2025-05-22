@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: product_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    platform: linux/amd64  # Explicitly set platform for Windows compatibility
+
+volumes:
+  postgres_data: 
