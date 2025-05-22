@@ -1,0 +1,18 @@
+database schema 
+
+
+            CREATE TABLE products (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            description TEXT,
+            price DECIMAL(10, 2) NOT NULL,
+            image_url VARCHAR(512)
+        );
+
+        -- Insert sample data
+        INSERT INTO products (name, description, price, image_url) VALUES
+        ('Smartphone X', 'Latest smartphone with advanced features', 799.99, 'https://example.com/images/smartphone-x.jpg'),
+        ('Laptop Pro', '15-inch laptop with high performance', 1299.99, 'https://example.com/images/laptop-pro.jpg'),
+        ('Wireless Headphones', 'Noise-cancelling wireless headphones', 199.99, 'https://example.com/images/headphones.jpg'),
+        ('Smart Watch', 'Fitness tracking and notifications', 249.99, 'https://example.com/images/smartwatch.jpg'),
+        ('Tablet Ultra', '10-inch tablet with retina display', 499.99, 'https://example.com/images/tablet.jpg');

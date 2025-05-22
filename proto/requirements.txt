@@ -1,0 +1,6 @@
+Flask==2.3.3
+psycopg2-binary==2.9.7
+python-dotenv==1.0.0
+gunicorn==21.2.0
+google-auth==2.23.0  # For authentication with Google Cloud services
+google-cloud-secret-manager==2.16.1  # For accessing secrets (recommended for production)
